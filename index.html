@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Agendamento Sandvik Taubaté</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail" aria-label="Navegacao">
+        <div class="brand-mark" aria-label="Sandvik">
+          <img src="assets/sandvik_logotype_white_rgb300.png" alt="Sandvik" />
+        </div>
+        <nav class="nav">
+          <a href="#agenda" class="active">Agenda</a>
+          <a href="#novo">Novo agendamento</a>
+          <a href="#calendario">Calendário mensal</a>
+          <a href="#resumo">Resumo</a>
+        </nav>
+        <div class="rail-footer">
+          <span>Taubaté Logistics Hub</span>
+          <strong>Dock intelligence</strong>
+        </div>
+      </aside>
+
+      <main>
+        <section class="hero" id="agenda">
+          <div class="hero-copy">
+            <div class="hero-kicker">
+              <span class="pulse"></span>
+              <p class="eyebrow">Recebimento e expedição</p>
+            </div>
+            <h1>Portal de Agendamento Sandvik Taubaté</h1>
+            <p>
+              Portal obrigatório para transportadoras, fornecedores e clientes
+              agendarem entregas e coletas na Sandvik Taubaté.
+            </p>
+            <div class="hero-tags" aria-label="Recursos do sistema">
+              <span>Portões inteligentes</span>
+              <span>Distância por CNPJ</span>
+              <span>Excel operacional</span>
+              <span>Edição com código</span>
+            </div>
+          </div>
+          <div class="hero-panel" id="resumo">
+            <div>
+              <span class="metric-label">Agendamentos</span>
+              <strong id="totalAgenda">0</strong>
+            </div>
+            <div>
+              <span class="metric-label">Hoje</span>
+              <strong id="totalHoje">0</strong>
+            </div>
+            <div>
+              <span class="metric-label">Notas</span>
+              <strong id="totalNotas">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <form class="scheduler" id="novo" autocomplete="off">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Entrada controlada</p>
+                <h2>Novo agendamento</h2>
+              </div>
+              <div class="operation-toggle" role="group" aria-label="Tipo de operação">
+                <label>
+                  <input type="radio" name="operacao" value="Descarga" checked />
+                  <span>Descarga</span>
+                </label>
+                <label>
+                  <input type="radio" name="operacao" value="Expedicao" />
+                  <span>Expedição</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                <span id="dateLabel">Data da entrega</span>
+                <input type="date" name="data" required />
+              </label>
+              <label>
+                Horário previsto
+                <input type="time" name="hora" required />
+              </label>
+              <label>
+                Portão operacional
+                <select name="doca" required>
+                  <option value="">Selecione</option>
+                  <option>Portão 1 - Produção / ponte rolante</option>
+                  <option>Portão 2 - Expedição / carregamento</option>
+                  <option>Portão 3 - Descarga de material</option>
+                </select>
+                <span class="input-note" id="gateHint">O portão será sugerido pela operação e peso.</span>
+              </label>
+              <label>
+                Prioridade
+                <select name="prioridade" required>
+                  <option>Normal</option>
+                  <option>Crítica</option>
+                  <option>Programada</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="group-title">
+              <h3>Motorista e veículo</h3>
+            </div>
+            <div class="form-grid">
+              <label>
+                Nome do motorista
+                <input type="text" name="motorista" placeholder="Nome completo" required />
+              </label>
+              <label>
+                CPF / documento
+                <input type="text" name="documento" placeholder="000.000.000-00" required />
+              </label>
+              <label>
+                Celular do motorista
+                <input type="tel" name="telefone" placeholder="(00) 00000-0000" inputmode="tel" required />
+              </label>
+              <label>
+                Transportadora
+                <input type="text" name="transportadora" required />
+              </label>
+              <label>
+                Placa cavalo
+                <input type="text" name="placa" placeholder="ABC1D23" maxlength="8" required />
+              </label>
+              <label>
+                Placa carreta
+                <input type="text" name="carreta" placeholder="Opcional" />
+              </label>
+              <label>
+                Tipo de veículo
+                <select name="veiculo" required>
+                  <option value="">Selecione</option>
+                  <option>Carro de passeio</option>
+                  <option>Utilitário pequeno</option>
+                  <option>Utilitário médio / van</option>
+                  <option>Caminhão 3/4</option>
+                  <option>Truck / trucado</option>
+                  <option>Carreta</option>
+                  <option>Prancha</option>
+                </select>
+                <span class="input-note" id="vehicleDurationHint">Selecione para ver o tempo reservado</span>
+              </label>
+              <label>
+                Peso estimado
+                <input type="text" name="peso" placeholder="Ex.: 12.500 kg" required />
+              </label>
+            </div>
+
+            <div class="group-title line">
+              <h3>Notas fiscais</h3>
+              <div class="note-actions">
+                <button type="button" class="ghost-btn" id="lookupCnpjs">Buscar CNPJs</button>
+              </div>
+            </div>
+            <p class="field-hint">
+              Cadastre cada NF em uma linha separada, com fornecedor/cliente, volumes e peso próprios.
+              Ao informar o CNPJ ou cidade/país de exportação, o sistema preenche origem/destino e calcula
+              a distância da viagem automaticamente.
+            </p>
+            <div class="invoice-list" id="invoiceList"></div>
+            <button type="button" class="add-note-bottom" id="addNota">+ Nota fiscal</button>
+
+            <div class="group-title">
+              <h3>Distância da viagem</h3>
+            </div>
+            <div class="distance-box">
+              <div class="form-grid">
+                <label>
+                  Origem
+                  <input type="text" name="origem" placeholder="Cidade / unidade / fornecedor" required />
+                </label>
+                <label>
+                  Destino
+                  <input type="text" name="destino" value="Sandvik - Rua Guglielmo Marconi, 240, Taubaté/SP" readonly />
+                </label>
+                <label>
+                  Latitude origem
+                  <input type="text" name="origemLat" inputmode="decimal" placeholder="-23.550520" required />
+                </label>
+                <label>
+                  Longitude origem
+                  <input type="text" name="origemLng" inputmode="decimal" placeholder="-46.633308" required />
+                </label>
+                <label>
+                  Latitude destino
+                  <input type="text" name="destinoLat" inputmode="decimal" placeholder="-23.026390" readonly />
+                </label>
+                <label>
+                  Longitude destino
+                  <input type="text" name="destinoLng" inputmode="decimal" placeholder="-45.555280" readonly />
+                </label>
+              </div>
+              <div class="distance-result">
+                <div>
+                  <span>Distância reta</span>
+                  <strong id="distanciaReta">0 km</strong>
+                </div>
+                <div>
+                  <span>Estimativa rodoviária</span>
+                  <strong id="distanciaRota">0 km</strong>
+                </div>
+                <div>
+                  <span>Tempo estimado</span>
+                  <strong id="tempoViagem">0 h</strong>
+                </div>
+                <label>
+                  KM final usado
+                  <input type="text" name="kmFinal" id="kmFinal" inputmode="decimal" placeholder="Calculado automaticamente" />
+                </label>
+              </div>
+            </div>
+
+            <label class="wide">
+              Observações de segurança / material
+              <textarea
+                name="observacoes"
+                rows="3"
+                placeholder="EPIs, tipo de material, restrições, contato interno..."
+              ></textarea>
+            </label>
+            <p class="field-hint">
+              Para entrar na empresa, o motorista deve estar com capacete, óculos de segurança,
+              calçado de segurança e protetor auricular.
+            </p>
+
+            <div class="actions">
+              <button type="button" class="secondary" id="cancelEdit" hidden>Cancelar edição</button>
+              <button type="reset" class="secondary">Limpar</button>
+              <button type="submit" class="primary">Salvar agendamento</button>
+            </div>
+          </form>
+
+          <section class="board" aria-label="Agenda de entregas">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Planejamento diário</p>
+                <h2>Janelas agendadas</h2>
+              </div>
+              <div class="board-tools">
+                <input type="date" id="filterDate" aria-label="Filtrar por data" />
+                <button type="button" class="icon-btn" id="adminLogin" title="Entrar como administrador">
+                  Admin
+                </button>
+                <button type="button" class="icon-btn" id="linkExcel" title="Vincular planilha do SharePoint">
+                  Vincular
+                </button>
+                <button type="button" class="icon-btn" id="saveExcel" title="Atualizar planilha vinculada">
+                  Atualizar
+                </button>
+                <button type="button" class="icon-btn" id="exportCsv" title="Exportar Excel">
+                  Excel
+                </button>
+              </div>
+            </div>
+            <p class="admin-status" id="adminStatus">Modo público: alterações exigem o código do agendamento.</p>
+            <div class="timeline" id="timeline"></div>
+          </section>
+        </section>
+
+        <section class="month-board" id="calendario" aria-label="Agenda mensal">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Visão mensal</p>
+              <h2>Agenda do mês</h2>
+            </div>
+            <div class="month-tools">
+              <button type="button" class="icon-btn" id="prevMonth" title="Mês anterior">&lt;</button>
+              <strong id="monthLabel">Mês</strong>
+              <button type="button" class="icon-btn" id="nextMonth" title="Próximo mês">&gt;</button>
+            </div>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>Dom</span>
+            <span>Seg</span>
+            <span>Ter</span>
+            <span>Qua</span>
+            <span>Qui</span>
+            <span>Sex</span>
+            <span>Sab</span>
+          </div>
+          <div class="month-grid" id="monthGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <aside class="ai-chat" aria-label="Assistente virtual Sandvik">
+      <button type="button" class="chat-toggle" id="chatToggle">IA</button>
+      <div class="chat-panel" id="chatPanel">
+        <div class="chat-head">
+          <div>
+            <p class="eyebrow">Assistente Sandvik</p>
+            <strong>Ajuda operacional</strong>
+          </div>
+          <button type="button" class="icon-btn" id="chatClose" title="Fechar">x</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="message bot">
+            Olá. O agendamento é obrigatório para entregas e coletas. Sem agendamento,
+            o material não será recebido nem carregado.
+            Para entrar na empresa, o motorista deve usar capacete, óculos de segurança,
+            calçado de segurança e protetor auricular.
+            Recebimento:
+            <a href="https://wa.me/5511913664451" target="_blank" rel="noopener">11 91366-4451</a>.
+            Emails:
+            <a href="mailto:bruno.santos@sandvik.com">bruno.santos@sandvik.com</a> e
+            <a href="mailto:luiz_gustavo.neco@sandvik.com">luiz_gustavo.neco@sandvik.com</a>.
+            Expedição:
+            <a href="https://wa.me/5511994509328" target="_blank" rel="noopener">11 99450-9328</a>.
+            Emails:
+            <a href="mailto:emerson.a.oliveira@sandvik.com">emerson.a.oliveira@sandvik.com</a> e
+            <a href="mailto:maicon.souza@sandvik.com">maicon.souza@sandvik.com</a>.
+          </div>
+        </div>
+        <form class="chat-form" id="chatForm">
+          <input id="chatInput" type="text" placeholder="Digite sua dúvida..." required />
+          <button type="submit" class="primary">Enviar</button>
+        </form>
+      </div>
+    </aside>
+
+    <template id="invoiceTemplate">
+      <div class="invoice-row">
+        <div class="lot-title">Nota fiscal individual</div>
+        <label>
+          Tipo do destino
+          <select name="notaDestinoTipo">
+            <option value="brasil">Brasil / CNPJ</option>
+            <option value="exportacao">Exportação / cidade e país</option>
+          </select>
+        </label>
+        <label>
+          Número da NF
+          <input type="text" name="notaNumero" placeholder="Ex.: 1001" required />
+        </label>
+        <label data-mode="brasil">
+          CNPJ fornecedor / cliente
+          <input type="text" name="notaCnpj" placeholder="00.000.000/0000-00" />
+        </label>
+        <label>
+          Nome do fornecedor / cliente
+          <input type="text" name="notaParceiro" placeholder="Ex.: Caninde / Emenbelt" required />
+        </label>
+        <label data-mode="exportacao" hidden>
+          Cidade destino exportação
+          <input type="text" name="notaCidadeExportacao" placeholder="Ex.: Santiago" />
+        </label>
+        <label data-mode="exportacao" hidden>
+          País destino exportação
+          <input type="text" name="notaPaisExportacao" placeholder="Ex.: Chile" />
+        </label>
+        <label>
+          Volumes
+          <input type="number" name="notaVolumes" min="1" placeholder="Ex.: 5" required />
+        </label>
+        <label>
+          Peso do lote
+          <input type="text" name="notaPeso" placeholder="Ex.: 850 kg" required />
+        </label>
+        <label class="invoice-destination">
+          Dados do destino
+          <textarea name="notaLocal" rows="2" placeholder="Busca automática pelo CNPJ ou cidade/país" readonly></textarea>
+        </label>
+        <input type="hidden" name="notaKmReta" />
+        <input type="hidden" name="notaKmEstimado" />
+        <input type="hidden" name="notaLat" />
+        <input type="hidden" name="notaLng" />
+        <div class="invoice-buttons">
+          <button type="button" class="lookup-note" title="Buscar destino">Buscar</button>
+          <button type="button" class="remove-note" title="Remover nota">Remover</button>
+        </div>
+      </div>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
