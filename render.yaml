@@ -5,7 +5,3 @@ services:
     plan: free
     buildCommand: ""
     startCommand: python server.py
-    disk:
-      name: agenda-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
