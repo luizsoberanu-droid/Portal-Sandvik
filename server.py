@@ -209,40 +209,52 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/schedules":
-            self.send_json(200, read_all())
+            try:
+                self.send_json(200, read_all())
+            except Exception as error:
+                self.send_json(500, {"error": f"Erro ao consultar banco central: {error}"})
             return
         if path == "/health":
-            self.send_json(200, {"ok": True})
+            self.send_json(200, {"ok": True, "database": "supabase" if USE_SUPABASE else "sqlite"})
             return
         super().do_GET()
 
     def do_POST(self):
         path = urlparse(self.path).path
         if path == "/api/schedules":
-            item = self.read_json()
-            items = read_all()
-            if not inside_working_hours(item):
-                self.send_json(409, {"error": "Horário fora da jornada de atendimento."})
-                return
-            existing = conflict(item, items)
-            if existing:
-                self.send_json(409, {"error": "Já existe agendamento nesse portão e horário.", "conflict": existing})
-                return
-            saved = write_one(item)
-            self.send_json(200, saved)
+            try:
+                item = self.read_json()
+                items = read_all()
+                if not inside_working_hours(item):
+                    self.send_json(409, {"error": "Horário fora da jornada de atendimento."})
+                    return
+                existing = conflict(item, items)
+                if existing:
+                    self.send_json(409, {"error": "Já existe agendamento nesse portão e horário.", "conflict": existing})
+                    return
+                saved = write_one(item)
+                self.send_json(200, saved)
+            except Exception as error:
+                self.send_json(500, {"error": f"Erro ao salvar no banco central: {error}"})
             return
         if path == "/api/schedules/bulk":
-            items = self.read_json().get("items", [])
-            replace_all(items)
-            self.send_json(200, {"ok": True, "count": len(items)})
+            try:
+                items = self.read_json().get("items", [])
+                replace_all(items)
+                self.send_json(200, {"ok": True, "count": len(items)})
+            except Exception as error:
+                self.send_json(500, {"error": f"Erro ao atualizar banco central: {error}"})
             return
         self.send_error(404)
 
     def do_DELETE(self):
         path = urlparse(self.path).path
         if path.startswith("/api/schedules/"):
-            delete_one(path.rsplit("/", 1)[-1])
-            self.send_json(200, {"ok": True})
+            try:
+                delete_one(path.rsplit("/", 1)[-1])
+                self.send_json(200, {"ok": True})
+            except Exception as error:
+                self.send_json(500, {"error": f"Erro ao excluir no banco central: {error}"})
             return
         self.send_error(404)
 
