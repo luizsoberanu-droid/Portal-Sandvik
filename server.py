@@ -1,6 +1,10 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+from datetime import datetime, timezone
 import json
 import os
 import sqlite3
@@ -11,6 +15,34 @@ ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("AGENDA_DATA_DIR", ROOT / "data"))
 DB_PATH = DATA_DIR / "agenda.db"
 PORT = int(os.environ.get("PORT", "4173"))
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+USE_SUPABASE = bool(SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY)
+
+
+def utc_now():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def supabase_request(method, path, payload=None, prefer=None):
+    if not USE_SUPABASE:
+      raise RuntimeError("Supabase não configurado")
+    body = None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    headers = {
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+        "Content-Type": "application/json",
+    }
+    if prefer:
+        headers["Prefer"] = prefer
+    request = Request(f"{SUPABASE_URL}/rest/v1/{path}", data=body, headers=headers, method=method)
+    try:
+        with urlopen(request, timeout=20) as response:
+            content = response.read().decode("utf-8")
+            return json.loads(content) if content else None
+    except HTTPError as error:
+        detail = error.read().decode("utf-8")
+        raise RuntimeError(detail or str(error)) from error
 
 
 def db():
@@ -29,25 +61,52 @@ def db():
 
 
 def read_all():
+    if USE_SUPABASE:
+        rows = supabase_request("GET", "schedules?select=payload") or []
+        items = [row["payload"] for row in rows]
+        return sorted(items, key=lambda item: f"{item.get('data', '')} {item.get('hora', '')}")
     with db() as conn:
         rows = conn.execute("select payload from schedules order by json_extract(payload, '$.data'), json_extract(payload, '$.hora')").fetchall()
     return [json.loads(row[0]) for row in rows]
 
 
 def write_one(item):
+    if USE_SUPABASE:
+        payload = {
+            "id": item["id"],
+            "payload": item,
+            "updated_at": utc_now(),
+        }
+        result = supabase_request(
+            "POST",
+            "schedules?on_conflict=id",
+            payload,
+            prefer="resolution=merge-duplicates,return=representation",
+        )
+        return result[0]["payload"] if result else item
     with db() as conn:
         conn.execute(
             "insert or replace into schedules (id, payload, updated_at) values (?, ?, ?)",
             (item["id"], json.dumps(item, ensure_ascii=False), time.time()),
         )
+    return item
 
 
 def delete_one(item_id):
+    if USE_SUPABASE:
+        supabase_request("DELETE", f"schedules?id=eq.{quote(item_id)}")
+        return
     with db() as conn:
         conn.execute("delete from schedules where id = ?", (item_id,))
 
 
 def replace_all(items):
+    if USE_SUPABASE:
+        supabase_request("DELETE", "schedules?id=neq.__never_match__", prefer="return=minimal")
+        if items:
+            payload = [{"id": item["id"], "payload": item, "updated_at": utc_now()} for item in items]
+            supabase_request("POST", "schedules", payload, prefer="return=minimal")
+        return
     with db() as conn:
         conn.execute("delete from schedules")
         conn.executemany(
@@ -169,8 +228,8 @@ class Handler(SimpleHTTPRequestHandler):
             if existing:
                 self.send_json(409, {"error": "Já existe agendamento nesse portão e horário.", "conflict": existing})
                 return
-            write_one(item)
-            self.send_json(200, item)
+            saved = write_one(item)
+            self.send_json(200, saved)
             return
         if path == "/api/schedules/bulk":
             items = self.read_json().get("items", [])
